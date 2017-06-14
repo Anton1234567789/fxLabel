@@ -164,6 +164,7 @@ public class StartConnDB extends Application{
                 preparedStatement.setString(3, NEWNAME.getText());
                 preparedStatement.setString(4, XTO.getText());
                 preparedStatement.setString(5, TACHKA.getText());
+//                preparedStatement.setString(6, ((TextField)date.getEditor()).getText());
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Information Dialog");
@@ -208,6 +209,8 @@ public class StartConnDB extends Application{
         NEWNAME.clear();
         XTO.clear();
         TACHKA.clear();
+
+        date.setValue(null);
     }
 
     private void getRB(){
