@@ -1,0 +1,15 @@
+
+.label{
+    /*-fx-text-fill: whitesmoke;*/
+}
+.button{
+    -fx-padding: 10 20 10 20;
+    -fx-end-margin: 200;
+}
+.field-background{
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: green;
+    -fx-highlight-text-fill: #ff1200;
+    -fx-highlight-fill: gray;
+    -fx-background-color: rgba(255,255,255,0.80);
+}
