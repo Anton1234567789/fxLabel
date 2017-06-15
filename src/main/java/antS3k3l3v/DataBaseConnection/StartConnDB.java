@@ -1,12 +1,18 @@
 package antS3k3l3v.DataBaseConnection;
 
+
+import antS3k3l3v.DataBaseConnection.objects.User;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -16,6 +22,7 @@ import javafx.stage.Stage;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class StartConnDB extends Application{
     private Connection connection;
@@ -25,9 +32,13 @@ public class StartConnDB extends Application{
     TextField DATE_OP, OLDNAME, NEWNAME, XTO;
     PasswordField TACHKA;
     DatePicker date;
+    final ObservableList options = FXCollections.observableArrayList();
+
 
     public void start(Stage primaryStage) throws Exception {
         checkConnectionDB();
+        fillComboBox();
+
 //        primaryStage.setTitle("DBSQL");
 //        Scene scene = new Scene(root, 400,400);
 //        primaryStage.setScene(scene);
@@ -35,10 +46,15 @@ public class StartConnDB extends Application{
 //        primaryStage.setTitle("JavaFX 8 Tutorial 17 - Switching Scenes");
 //        primaryStage.setTitle("JavaFX 8 Tutorial 18 - Database");
 //        primaryStage.setTitle("JavaFX 8 Tutorial 19 - Database");
-        primaryStage.setTitle("JavaFX 8 Tutorial 20 - DataPicker Database");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 20 - DataPicker Database");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 21 - Table and Database");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 22 - Combobox and Database");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 23 - Combobox, TextField and Database");
+        primaryStage.setTitle("JavaFX 8 Tutorial 23 - Combobox, TextField and Database");
+
 
         BorderPane layout = new BorderPane();
-        Scene newscene = new Scene(layout, 400,400, Color.rgb(0,0,0,0));
+        Scene newscene = new Scene(layout, 1000,400, Color.rgb(0,0,0,0));
 
         Group group = new Group();
         Scene scene = new Scene(group, 320,160, Color.rgb(0,0,0,0));
@@ -187,12 +203,151 @@ public class StartConnDB extends Application{
 
         BorderPane.setMargin(fields,new Insets(0,0,0,20));
 
+        TableView<User> table = new TableView<User>();
+        final ObservableList<User> data = FXCollections.observableArrayList();
+
+        TableColumn column = new TableColumn("DATE_OP");
+        column.setMinWidth(80);
+        column.setCellValueFactory(new PropertyValueFactory<>("DATE_OP"));
+
+        TableColumn column1 = new TableColumn("OLDNAME");
+        column1.setMinWidth(100);
+        column1.setCellValueFactory(new PropertyValueFactory<>("OLDNAME"));
+
+        TableColumn column2 = new TableColumn("NEWNAME");
+        column2.setMinWidth(100);
+        column2.setCellValueFactory(new PropertyValueFactory<>("NEWNAME"));
+
+        TableColumn column3 = new TableColumn("XTO");
+        column3.setMinWidth(60);
+        column3.setCellValueFactory(new PropertyValueFactory<>("XTO"));
+
+        TableColumn column4 = new TableColumn("TACHKA");
+        column4.setMinWidth(30);
+        column4.setCellValueFactory(new PropertyValueFactory<>("TACHKA"));
+
+
+        table.getColumns().addAll(column,column1,column2,column3,column4);
+        table.setTableMenuButtonVisible(true);
+
+        layout.setRight(table);
+        BorderPane.setMargin(table, new Insets(0,100,10,0));
+
+        Button loadDB = new Button("Load data table");
+        loadDB.setFont(Font.font("SanSerif", 15));
+        loadDB.setOnAction(event -> {
+            try{
+                String query = "Select * From ZAEBALI";
+                preparedStatement = connection.prepareStatement(query);
+
+                resultSet = preparedStatement.executeQuery();
+
+                while (resultSet.next()){
+                    data.add(new User(
+                            resultSet.getString("DATE_OP"),
+                            resultSet.getString("OLDNAME"),
+                            resultSet.getString("NEWNAME"),
+                            resultSet.getString("XTO"),
+                            resultSet.getString("TACHKA")
+                            ));
+                    table.setItems(data);
+                }
+
+                preparedStatement.close();
+                resultSet.close();
+            }catch (Exception e){
+                System.err.print(e);
+            }
+        });
+
+        ComboBox comboBox = new ComboBox(options);
+        comboBox.setMaxHeight(30);
+
+        comboBox.setOnAction(event -> {
+            String query = "Select * FROM ZAEBALI WHERE OLDNAME = ? ";
+            try {
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1, (String)comboBox.getSelectionModel().getSelectedItem());
+                resultSet = preparedStatement.executeQuery();
+
+                while (resultSet.next()){
+                    DATE_OP.setText(resultSet.getString("DATE_OP"));
+                    OLDNAME.setText(resultSet.getString("OLDNAME"));
+                    NEWNAME.setText(resultSet.getString("NEWNAME"));
+                    XTO.setText(resultSet.getString("XTO"));
+                    TACHKA.setText(resultSet.getString("TACHKA"));
+
+//                    ((TextField)date.getEditor().setText(resultSet.getString("date"));
+                }
+
+                preparedStatement.close();
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+
+        HBox hBox = new HBox(5);
+        hBox.getChildren().addAll(loadDB,comboBox);
+
+
+        layout.setBottom(hBox);
+        BorderPane.setMargin(hBox, new Insets(10,0,10,600));
+
+        ListView listView = new ListView(options);
+        listView.setMaxSize(100, 250);
+        layout.setLeft(listView);
+        BorderPane.setMargin(listView, new Insets(10));
+
+        listView.setOnMouseClicked(event -> {
+            String query = "Select * FROM ZAEBALI WHERE OLDNAME = ? ";
+            try {
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1, (String)listView.getSelectionModel().getSelectedItem());
+                resultSet = preparedStatement.executeQuery();
+
+                while (resultSet.next()){
+                    DATE_OP.setText(resultSet.getString("DATE_OP"));
+                    OLDNAME.setText(resultSet.getString("OLDNAME"));
+                    NEWNAME.setText(resultSet.getString("NEWNAME"));
+                    XTO.setText(resultSet.getString("XTO"));
+                    TACHKA.setText(resultSet.getString("TACHKA"));
+
+//                    ((TextField)date.getEditor().setText(resultSet.getString("date"));
+                }
+
+                preparedStatement.close();
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
 
         primaryStage.setScene(scene);
         primaryStage.show();
 
     }
 
+    public void fillComboBox(){
+
+
+        try {
+            String query = "select OLDNAME from ZAEBALI";
+            preparedStatement = connection.prepareStatement(query);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()){
+                options.add(resultSet.getString("OLDNAME"));
+            }
+
+            preparedStatement.close();
+            resultSet.close();
+
+        } catch (SQLException e) {e.printStackTrace();
+
+        }
+
+    }
     private void checkConnectionDB() {
         connection = DBConnection.DBConnect();
         if (connection == null){
