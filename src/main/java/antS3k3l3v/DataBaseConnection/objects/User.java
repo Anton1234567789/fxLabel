@@ -9,13 +9,27 @@ public class User {
     private final SimpleStringProperty NEWNAME;
     private final SimpleStringProperty XTO;
     private final SimpleStringProperty TACHKA;
+    private final SimpleStringProperty GENDER;
 
-    public User(String date_op, String oldname, String newname, String xto, String tachka) {
+    public User(String date_op, String oldname, String newname, String xto, String tachka,String gender) {
         this.DATE_OP = new SimpleStringProperty(date_op);
         this.OLDNAME = new SimpleStringProperty(oldname);
         this.NEWNAME = new SimpleStringProperty(newname);
         this.XTO = new SimpleStringProperty(xto);
         this.TACHKA = new SimpleStringProperty(tachka);
+        this.GENDER = new SimpleStringProperty(gender);
+    }
+
+    public String getGENDER() {
+        return GENDER.get();
+    }
+
+    public SimpleStringProperty GENDERProperty() {
+        return GENDER;
+    }
+
+    public void setGENDER(String GENDER) {
+        this.GENDER.set(GENDER);
     }
 
     public String getDATE_OP() {

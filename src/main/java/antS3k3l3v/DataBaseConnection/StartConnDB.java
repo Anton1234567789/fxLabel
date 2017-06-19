@@ -11,6 +11,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -19,10 +20,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StartConnDB extends Application{
     private Connection connection;
@@ -33,16 +34,22 @@ public class StartConnDB extends Application{
     PasswordField TACHKA;
     DatePicker date;
     final ObservableList options = FXCollections.observableArrayList();
+    final ObservableList<User> data = FXCollections.observableArrayList();
 
+    TableView<User> table;
+    ListView listView;
+    private RadioButton male;
+    private RadioButton female;
+    private String radiobuttonLabel;
 
     public void start(Stage primaryStage) throws Exception {
         checkConnectionDB();
-        fillComboBox();
+
 
 //        primaryStage.setTitle("DBSQL");
 //        Scene scene = new Scene(root, 400,400);
 //        primaryStage.setScene(scene);
-//        primaryStage.initStyle(StageStyle.TRANSPARENT);
+//        primaryStage.initStyle(StageStyle.TR444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444446666666666666666666666666666666666666666666666666666666666ANSPARENT);
 //        primaryStage.setTitle("JavaFX 8 Tutorial 17 - Switching Scenes");
 //        primaryStage.setTitle("JavaFX 8 Tutorial 18 - Database");
 //        primaryStage.setTitle("JavaFX 8 Tutorial 19 - Database");
@@ -50,11 +57,18 @@ public class StartConnDB extends Application{
 //        primaryStage.setTitle("JavaFX 8 Tutorial 21 - Table and Database");
 //        primaryStage.setTitle("JavaFX 8 Tutorial 22 - Combobox and Database");
 //        primaryStage.setTitle("JavaFX 8 Tutorial 23 - Combobox, TextField and Database");
-        primaryStage.setTitle("JavaFX 8 Tutorial 23 - Combobox, TextField and Database");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 25 - Refresh Tab;lle On Adding and Database");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 26 - Login From Database On Enter KeyPressed");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 27 - Warning Alert Dialog Database ");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 28 - Delete user From Database ");
 
+//        primaryStage.setTitle("JavaFX 8 Tutorial 29 - Radio Button From Database ");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 32 - Validate and Clear RB From Database ");
+//        primaryStage.setTitle("JavaFX 8 Tutorial 33 - Fetch or Get RB From Database ");
+        primaryStage.setTitle("JavaFX 8 Tutorial 34 - Number or USER ID From Database ");
 
         BorderPane layout = new BorderPane();
-        Scene newscene = new Scene(layout, 1000,400, Color.rgb(0,0,0,0));
+        Scene newscene = new Scene(layout, 1000,500, Color.rgb(0,0,0,0));
 
         Group group = new Group();
         Scene scene = new Scene(group, 320,160, Color.rgb(0,0,0,0));
@@ -85,6 +99,37 @@ public class StartConnDB extends Application{
         passwordField.setFont(Font.font("SanSerif",17));
         passwordField.setPromptText("Password");
 
+        passwordField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER){
+                try {
+                    String query = "select * from GASTELLO.ZAEBALI WHERE OLDNAME=? AND NEWNAME=?";
+                    preparedStatement = connection.prepareStatement(query);
+
+                    preparedStatement.setString(1, usernameFiel.getText());
+                    preparedStatement.setString(2, passwordField.getText());
+                    resultSet = preparedStatement.executeQuery();
+
+                    if (resultSet.next()){
+//                    label.setText("Login successful");
+                        primaryStage.setScene(newscene);
+                        primaryStage.show();
+                    }else {
+                        label.setText("login fail");
+                    }
+                    usernameFiel.clear();
+                    passwordField.clear();
+
+                            fillComboBox();
+                    preparedStatement.close();
+                    resultSet.close();
+                }catch (Exception e){
+                    label.setText("SQL Error");
+                    System.err.print(e);
+                }
+            }
+        });
+
+
         Button button = new Button("Login");
         button.setFont(Font.font("SanSerif", 14));
         button.setOnAction(event -> {
@@ -105,7 +150,7 @@ public class StartConnDB extends Application{
                 }
                 usernameFiel.clear();
                 passwordField.clear();
-
+                fillComboBox();
                 preparedStatement.close();
                 resultSet.close();
             }catch (Exception e){
@@ -137,6 +182,7 @@ public class StartConnDB extends Application{
         DATE_OP.setPromptText("DATE_OP");
         DATE_OP.setMaxWidth(300);
 
+
         OLDNAME = new TextField();
         OLDNAME.setFont(Font.font("SanSerif", 15));
         OLDNAME.setPromptText("OLDNAME");
@@ -157,29 +203,41 @@ public class StartConnDB extends Application{
         date.setMaxHeight(300);
         date.setStyle("-fx-font-size: 20");
 
-//        TextField un = new TextField();
-//        un.setFont(Font.font("SanSerif", 20));
-//        un.setPromptText("TACHKA");
-//        un.setMaxWidth(300);
 
         TACHKA = new PasswordField();
         TACHKA.setFont(Font.font("SanSerif", 15));
         TACHKA.setPromptText("TACHKA");
         TACHKA.setMaxWidth(300);
 
+        ToggleGroup gender = new ToggleGroup();
+
+        male = new RadioButton("Male");
+        male.setToggleGroup(gender);
+        male.setOnAction(event -> {
+                radiobuttonLabel = male.getText();
+        });
+
+        female = new RadioButton("FeMale");
+        female.setToggleGroup(gender);
+        female.setOnAction(event -> {
+            radiobuttonLabel = female.getText();
+        });
+
         // ДОБАВЛЕНИЕ ДАННЫХ В ТАБЛИЦУ ПО НАЖАТИЮ КНОПКИ
-        Button button1 = new Button("Save");
-        button1.setFont(Font.font("SanSerif",16));
-        button1.setOnAction(event -> {
+        Button save = new Button("Save");
+        save.setFont(Font.font("SanSerif",16));
+        save.setOnAction(event -> {
+            if (validateFields() & validateNumber()){
             try {
-                String query = "INSERT INTO ZAEBALI (DATE_OP, OLDNAME, NEWNAME, XTO, TACHKA) " +
-                        "VALUES (?,?,?,?,?)";
+                String query = "INSERT INTO ZAEBALI (DATE_OP, OLDNAME, NEWNAME, XTO, TACHKA, GENDER) " +
+                        "VALUES (?,?,?,?,?,?)";
                 preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, DATE_OP.getText());
+                preparedStatement.setDate(1, (Date.valueOf(DATE_OP.getText())));
                 preparedStatement.setString(2, OLDNAME.getText());
                 preparedStatement.setString(3, NEWNAME.getText());
                 preparedStatement.setString(4, XTO.getText());
                 preparedStatement.setString(5, TACHKA.getText());
+                preparedStatement.setString(6, radiobuttonLabel);
 //                preparedStatement.setString(6, ((TextField)date.getEditor()).getText());
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -188,23 +246,26 @@ public class StartConnDB extends Application{
                 alert.setContentText("User has been created");
                 alert.showAndWait();
 
-                preparedStatement.execute();
+                preparedStatement.executeUpdate();
                 preparedStatement.close();
-
+                resultSet.close();
                 clearFields();
+                refreshTable();
+
+                fillComboBox();
             }catch (Exception e){
                 label.setText("SQL Error");
                 System.err.print(e);
             }
+            }
         });
-        fields.getChildren().addAll(label1, DATE_OP, OLDNAME, NEWNAME, XTO, TACHKA,date, button1);
+        fields.getChildren().addAll(label1, DATE_OP, OLDNAME, NEWNAME, XTO, TACHKA,date,male,female ,save);
         layout.setCenter(fields);
 
 
         BorderPane.setMargin(fields,new Insets(0,0,0,20));
 
-        TableView<User> table = new TableView<User>();
-        final ObservableList<User> data = FXCollections.observableArrayList();
+        table = new TableView<User>();
 
         TableColumn column = new TableColumn("DATE_OP");
         column.setMinWidth(80);
@@ -226,38 +287,20 @@ public class StartConnDB extends Application{
         column4.setMinWidth(30);
         column4.setCellValueFactory(new PropertyValueFactory<>("TACHKA"));
 
+        TableColumn column5 = new TableColumn("Gender");
+        column5.setMinWidth(30);
+        column5.setCellValueFactory(new PropertyValueFactory<>("GENDER"));
 
-        table.getColumns().addAll(column,column1,column2,column3,column4);
+        table.getColumns().addAll(column,column1,column2,column3,column4,column5);
         table.setTableMenuButtonVisible(true);
 
         layout.setRight(table);
-        BorderPane.setMargin(table, new Insets(0,100,10,0));
+        BorderPane.setMargin(table, new Insets(0,35,10,50));
 
         Button loadDB = new Button("Load data table");
         loadDB.setFont(Font.font("SanSerif", 15));
         loadDB.setOnAction(event -> {
-            try{
-                String query = "Select * From ZAEBALI";
-                preparedStatement = connection.prepareStatement(query);
-
-                resultSet = preparedStatement.executeQuery();
-
-                while (resultSet.next()){
-                    data.add(new User(
-                            resultSet.getString("DATE_OP"),
-                            resultSet.getString("OLDNAME"),
-                            resultSet.getString("NEWNAME"),
-                            resultSet.getString("XTO"),
-                            resultSet.getString("TACHKA")
-                            ));
-                    table.setItems(data);
-                }
-
-                preparedStatement.close();
-                resultSet.close();
-            }catch (Exception e){
-                System.err.print(e);
-            }
+        refreshTable();
         });
 
         ComboBox comboBox = new ComboBox(options);
@@ -276,10 +319,19 @@ public class StartConnDB extends Application{
                     NEWNAME.setText(resultSet.getString("NEWNAME"));
                     XTO.setText(resultSet.getString("XTO"));
                     TACHKA.setText(resultSet.getString("TACHKA"));
-
+                    if ("Male".equals(resultSet.getString("GENDER"))){
+                        male.setSelected(true);
+                    }else if("FeMale".equals(resultSet.getString("GENDER"))){
+                        female.setSelected(true);
+                    }
+                    else {
+                        male.setSelected(false);
+                        female.setSelected(false);
+                    }
 //                    ((TextField)date.getEditor().setText(resultSet.getString("date"));
                 }
 
+                preparedStatement.execute();
                 preparedStatement.close();
                 resultSet.close();
             } catch (SQLException e) {
@@ -287,14 +339,45 @@ public class StartConnDB extends Application{
             }
         });
 
+        Button delete = new Button("Delete User");
+        delete.setFont(Font.font("SanSerif",15));
+        delete.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Conformation Dialog");
+            alert.setHeaderText(null);
+            alert.setContentText("Are you sure delete record?");
+            Optional<ButtonType> action = alert.showAndWait();
+            if (action.get() == ButtonType.OK) {
+                try{
+                    String query = "DELETE FROM ZAEBALI WHERE OLDNAME = ?";
+                    preparedStatement = connection.prepareStatement(query);
+                    preparedStatement.setString(1, OLDNAME.getText());
+
+
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
+                    resultSet.close();
+                    clearFields();
+                    refreshTable();
+                    fillComboBox();
+                }catch (Exception e){
+                    label.setText("SQL Error");
+                    System.err.print(e);
+                }
+            }
+
+        });
+
+
+
         HBox hBox = new HBox(5);
-        hBox.getChildren().addAll(loadDB,comboBox);
+        hBox.getChildren().addAll(loadDB, delete, comboBox);
 
 
         layout.setBottom(hBox);
         BorderPane.setMargin(hBox, new Insets(10,0,10,600));
 
-        ListView listView = new ListView(options);
+        listView = new ListView(options);
         listView.setMaxSize(100, 250);
         layout.setLeft(listView);
         BorderPane.setMargin(listView, new Insets(10));
@@ -302,10 +385,10 @@ public class StartConnDB extends Application{
         listView.setOnMouseClicked(event -> {
             String query = "Select * FROM ZAEBALI WHERE OLDNAME = ? ";
             try {
+
                 preparedStatement = connection.prepareStatement(query);
                 preparedStatement.setString(1, (String)listView.getSelectionModel().getSelectedItem());
                 resultSet = preparedStatement.executeQuery();
-
                 while (resultSet.next()){
                     DATE_OP.setText(resultSet.getString("DATE_OP"));
                     OLDNAME.setText(resultSet.getString("OLDNAME"));
@@ -313,14 +396,32 @@ public class StartConnDB extends Application{
                     XTO.setText(resultSet.getString("XTO"));
                     TACHKA.setText(resultSet.getString("TACHKA"));
 
+                    if (null != resultSet.getString("GENDER"))
+                        switch (resultSet.getString("GENDER")){
+                            case "Male":
+                                male.setSelected(true);
+                                break;
+                            case "FeMale":
+                                female.setSelected(true);
+                                break;
+                                default:
+                                    male.setSelected(false);
+                                    female.setSelected(false);
+                                    break;
+                        }  else {
+                        male.setSelected(false);
+                        female.setSelected(false);
+                    }
 //                    ((TextField)date.getEditor().setText(resultSet.getString("date"));
                 }
-
+                preparedStatement.execute();
                 preparedStatement.close();
                 resultSet.close();
+                refreshTable();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+
         });
 
         primaryStage.setScene(scene);
@@ -328,9 +429,77 @@ public class StartConnDB extends Application{
 
     }
 
+    private boolean validateNumber(){
+        Pattern p = Pattern.compile("[0-9]+");
+        Matcher m = p.matcher(TACHKA.getText());
+        if (m.find() && m.group().equals(TACHKA.getText())){
+            return true;
+        }else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("VaLidate Number TACHKA");
+            alert.setHeaderText(null);
+            alert.setContentText("Please Enter Valid Number TACHKA");
+            alert.showAndWait();
+            return false;
+        }
+    }
+
+    private  boolean validateFields(){
+        if (DATE_OP.getText().isEmpty() | OLDNAME.getText().isEmpty() |
+                NEWNAME.getText().isEmpty() | XTO.getText().isEmpty()){
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("VaLidate Fields");
+            alert.setHeaderText(null);
+            alert.setContentText("Please Enter Into The Fields");
+            alert.showAndWait();
+
+            return false;
+        }
+        if (!(male.isSelected() | female.isSelected())) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("VaLidate genders");
+            alert.setHeaderText(null);
+            alert.setContentText("Please Entery Gender (Male,Female)");
+            alert.showAndWait();
+
+            return false;
+        }
+        return true;
+    }
+
+    public void refreshTable(){
+            data.clear();
+        try{
+            String query = "Select * From ZAEBALI";
+            preparedStatement = connection.prepareStatement(query);
+
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()){
+                data.add(new User(
+                        resultSet.getString("DATE_OP"),
+                        resultSet.getString("OLDNAME"),
+                        resultSet.getString("NEWNAME"),
+                        resultSet.getString("XTO"),
+                        resultSet.getString("TACHKA"),
+                        resultSet.getString("GENDER")
+                ));
+                table.setItems(data);
+            }
+
+            preparedStatement.executeUpdate();
+
+            preparedStatement.close();
+            resultSet.close();
+        }catch (Exception e){
+            System.err.print(e);
+        }
+    }
+
+
     public void fillComboBox(){
 
-
+        options.clear();
         try {
             String query = "select OLDNAME from ZAEBALI";
             preparedStatement = connection.prepareStatement(query);
@@ -340,14 +509,18 @@ public class StartConnDB extends Application{
                 options.add(resultSet.getString("OLDNAME"));
             }
 
+            preparedStatement.executeUpdate();
             preparedStatement.close();
             resultSet.close();
+            refreshTable();
 
         } catch (SQLException e) {e.printStackTrace();
 
         }
 
+
     }
+
     private void checkConnectionDB() {
         connection = DBConnection.DBConnect();
         if (connection == null){
@@ -364,8 +537,9 @@ public class StartConnDB extends Application{
         NEWNAME.clear();
         XTO.clear();
         TACHKA.clear();
-
-        date.setValue(null);
+        male.setSelected(false);
+        female.setSelected(false);
+//        date.setValue(null);
     }
 
     private void getRB(){
