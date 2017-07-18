@@ -16,8 +16,8 @@ public class DBConnection {
 
             Class.forName("oracle.jdbc.driver.OracleDriver");
             String url = "jdbc:oracle:thin:@192.168.10.56:1521:ora112";
-            String user = "gastello";
-            String pass = "gjkysqgbpltw";
+            String user = "*";
+            String pass = "*";
             connection = DriverManager.getConnection(url, user, pass);
 
         } catch (ClassNotFoundException e) {
